@@ -1,0 +1,16 @@
+{
+	"name": "dictation",
+	"description": "Dictation is a grammar for describing web applications in a restful manner",
+	"main": "./index",
+	"author": "Bediako George",
+	"version": "0.1.0",
+	"repository" : { "type" : "git" , "url" : "http://github.com/LucidTechnics/dictation.git" },
+	"bugs" : { "url" : "http://github.com/LucidTechnics/dictation/issues" },
+	"licenses" :[
+		{
+		"type" : "MIT",
+		"url" : "http://github.com/LucidTechnics/dictation/raw/master/LICENSE"
+		}
+	],
+	"devDependencies": { }
+}
