@@ -1,16 +1,23 @@
 {
 	"name": "dictation",
-	"description": "Dictation is a grammar for describing web applications in a restful manner",
-	"main": "./index",
-	"author": "Bediako George",
+
+	"description": "Dictation is a english based domain specific language used to describe an application's resources.",
+	"main": "./dictation",
+	"author": "Bediako George <bediako.george@lucidtechnics.com>",
 	"version": "0.1.0",
+	"maintainers": [
+		{
+			"name": "Bediako George",
+			"email": "bediako.george@lucidtechnics.com",
+			"web": "http://www.lucidtechnics.com"
+		}
+	],
 	"repository" : { "type" : "git" , "url" : "http://github.com/LucidTechnics/dictation.git" },
 	"bugs" : { "url" : "http://github.com/LucidTechnics/dictation/issues" },
 	"licenses" :[
 		{
-		"type" : "MIT",
-		"url" : "http://github.com/LucidTechnics/dictation/raw/master/LICENSE"
+			"type" : "MIT",
+			"url" : "http://github.com/LucidTechnics/dictation/raw/master/LICENSE"
 		}
-	],
-	"devDependencies": { }
+	]
 }

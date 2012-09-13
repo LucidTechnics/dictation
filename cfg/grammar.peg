@@ -1,0 +1,144 @@
+{
+  var resourceMap = {};
+  var resource;
+  var attribute;
+  var actionList = [];
+
+  var actionMap = {viewed: 'view', read: 'view', collected: 'collect', created: 'create', updated: 'update', deleted: 'delete'};
+
+}
+
+resources = resources:resource+ { return resourceMap; }
+
+resource = '\n'* article (resourceName:resourceName+ { resource = { securityMap: {view: {all: 1}, collect: { all: 1}, create: {all: 1}, update: {all: 1}, delete: {noone: 1}}, ancestorList: [], attributeList:[] }; resource.name = resourceName.join('');
+resourceMap[resource.name] = resource;}) (isAbstract/hasPropertiesFrom)? attributeList? securityStatements?
+
+article = 'An '/'an '/'A '/'a '
+
+hasPropertiesFrom = ' has properties from' ancestorList
+
+ancestorList = ' ' ancestor (' and' ancestorList)?
+
+ancestor = article (ancestor:resourceName+ {resource.ancestorList.push(ancestor.join(''));})
+
+isAbstract = isAbstract:' is abstract' { resource.isAbstract = true; }
+
+resourceName = resourceNamePrefixSpace:' '? resourceNameHead:[A-Z] resourceNameTail:[a-z0-9]+
+{ return resourceNamePrefixSpace + resourceNameHead + resourceNameTail.join(''); }
+
+securityStatements = securityStatement+
+
+securityStatement = (canBe:'\ncan be ' {actionList = []; }) actionList ' by ' roleList
+
+actionList = action ((' or '/' and ') action)*
+
+action = actionName:('viewed'/'read'/'collected'/'created'/'updated'/'deleted'/'destroyed') {
+  resource.securityMap[actionMap[actionName]] = {};     actionList.push(actionMap[actionName]);
+}
+
+roleList = role ((' or '/' and ') role)*
+
+role = article roleName
+
+roleName = roleName:([a-z0-9])*
+{ actionList.forEach(function(_action)
+  {   
+    resource.securityMap[_action][roleName.join('')] = 1;
+  }); 
+}
+
+attributeList = attribute*
+
+attribute = '\n' hasA (attributeName: attributeName {attribute = {name: attributeName, featureMap: {}}; resource.attributeList.push(attribute); }
+) which? 
+
+hasA = 'has an '/'has a '
+
+which = ' which ' featureList
+
+featureList = feature (' and ' feature)*
+
+feature = (is required)/(isNotRequired)/((hasA/has) maxValue)/((hasA/has) minValue)/(hasA maxLength)/(hasA minLength)/(is type)/(has type)/(is encrypted)/(has allowedValues)/(isA indexed)/(is searched)/(hasA widget)
+
+is = 'is '
+
+isA = 'is a '/'is an '
+
+isNot = 'is not '
+
+has = 'has '
+
+isNotRequired = 'is not required' { attribute.featureMap['required'] = false; }
+
+required = 'required' {attribute.featureMap['required'] = true;}
+
+maxValue = 'maximum value ' value: value {attribute.featureMap['maximum value'] = value.join(''); }
+
+minValue = 'minimum value '  value:value
+{attribute.featureMap['minimum value'] = value.join(''); }
+
+maxLength = 'maximum length ' length: [0-9]+
+{attribute.featureMap['maximum length'] = length.join(''); }
+
+minLength = 'minimum length ' length: [0-9]+
+{attribute.featureMap['minimum length'] = length.join(''); }
+
+type = 'type ' (type: typeToken
+{attribute.featureMap['type'] = type.join(''); })
+
+typeToken = value
+
+encrypted = 'encrypted'
+{attribute.featureMap['encrypted'] = true;}
+
+allowedValues = allowedValues : ('allowed values ' {attribute.featureMap['allowed values'] = [];})
+ allowedValueList: allowedValueList
+
+allowedValueList =  allowedValue (', ' allowedValue )* 
+
+allowedValue = value: value { attribute.featureMap['allowed values'].push(value.join('')); }
+
+value = [a-zA-Z0-9]+
+
+indexed = 'lookup '
+{attribute.featureMap['lookup'] = true;}
+
+searched = 'full text searched '
+{attribute.featureMap['full text searched'] = true;}
+
+widget = widget: ('widget ' {attribute.featureMap['widget'] = {}}) component
+
+component = input/readonly/hidden/email/address/textarea/select/radio/checkbox
+
+input = input: 'input' (withDefaultValue)? {attribute.featureMap['widget'].type = 'input'}
+
+withDefaultValue = (' with default value ' defaultValue: (value)? { attribute.featureMap['widget'].defaultValue = defaultValue.join(''); } )
+
+readonly = 'readonly' (withDefaultValue)?
+{attribute.featureMap['widget'].type = 'readonly'}
+
+hidden = 'hidden' (withDefaultValue)?
+{attribute.featureMap['widget'].type = 'hidden'}
+
+email = 'email' (withDefaultValue)?
+{attribute.featureMap['widget'].type = 'email'}
+
+address = 'address' (withDefaultValue)?
+{attribute.featureMap['widget'].type = 'address'}
+
+phone = 'phone' (withDefaultValue)?
+{attribute.featureMap['widget'].type = 'phone'}
+
+textarea = 'textarea' (withDefaultValue)?
+{attribute.featureMap['widget'].type = 'textarea'}
+
+select = 'select' (withDefaultValue)?
+{attribute.featureMap['widget'].type = 'select'}
+
+radio = 'radio' (withDefaultValue)?
+{attribute.featureMap['widget'].type = 'radio'}
+
+checkbox = 'checkbox' (withDefaultValue)? 
+{attribute.featureMap['widget'].type = 'checkbox'}
+
+attributeName = attributeNamePrefixSpace: ' '? attributeName:[a-z]+ { return attributeNamePrefixSpace + attributeName.join(''); }
