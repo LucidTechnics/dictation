@@ -1,0 +1,40 @@
+start
+  = define+
+define=m1:defineName("\n"/" and "/" ") m2:(describe("\n")*)*{return {name:m1,describe:m2}}
+describe = defineHasProperty/defineHas/defineCan/comment
+
+separator = space/comment/""
+space = " "/comment
+comment="//"(char/" ")*(""/"\n") {return ["",""];}
+char = [A-z0-9*':?{()+|}/.,\\\]\["^\-$]
+capitalChar = [A-Z]
+word = m1:char+ {return m1.join('');}
+wordAndSeparator = m1:word m2:separator {return m1+m2}
+
+resourceNameWord = m1:capitalChar m2:[a-z]+ {return m1+m2.join('');} 
+resourceNameWordAndSeparator = comment/(m1:resourceNameWord m2:separator) {return m1+m2;}
+defineName =("A "/"An ") m1:resourceNameWordAndSeparator+  m2:("is "word)?(" "comment)? (" "?defineHasProperty)?{return {name:m1.join(''),is:m2[1]};}
+
+hasName = m1:(word((space"which")/" "/"")){return m1;}
+hasNameString = m1:hasName+ {var returnVal="";m1.forEach(function(e,i){if(i==m1.length-1){returnVal += e[0];}else{returnVal +=e[0]+e[1];}});return returnVal;} 
+
+hasDes = m1:(comment/word(" and"/" "/"")){return m1;}
+hasDesString = m1:hasDes+  {var returnVal="";m1.forEach(function(e,i){if(i==m1.length-1){returnVal += e[0];}else{returnVal +=e[0]+e[1];}});return returnVal;} 
+
+hasDescrib = m1:(" is"/" has"/" have")(" a "/" an "/" ")? m2:hasDesString{var object={}; object[m1.replace(" ","")]=m2;return object;}
+
+defineHas = "has "("one "/"a "/"an ") m1:hasNameString m2:hasDescrib*{var object={'has a':m1}; m2.push(object);return m2;}
+
+canAuth = ("a "/"an ")?m:canName+ {var returnString=""; m.forEach(function(e){returnString += e[0]+" "}); return returnString}
+canName = m1:(comment/word((space"or")/space/"")){return m1;}
+canNameString = m1:canName+ {var returnVal="";m1.forEach(function(e,i){if(i==m1.length-1){returnVal += e[0];}else{returnVal +=e[0]+e[1];}});return returnVal;} 
+
+canOperation =m:((" "word" or")/(" "word" and")/(" "word" by ")){return m[1];}
+
+defineCan = "can be" m1:canOperation+ m2:(canAuth+" "?)+{var returnArray=[]; m2.forEach(function(e){returnArray.push(e[0][0]);});return {operation:m1,auth:returnArray};}
+
+hasPropertyName = m1:(comment/word((space"which")/" "/"")){return m1;}
+hasPropertyNameString = m1:hasPropertyName+ {var returnVal="";m1.forEach(function(e,i){if(i==m1.length-1){returnVal += e[0];}else{returnVal +=e[0]+e[1];}});return returnVal;} 
+
+defineHasProperty
+="has properties from "("a "/"an ")? m1:hasPropertyNameString{return {property:m1}}
