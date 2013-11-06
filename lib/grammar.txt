@@ -1,5 +1,5 @@
 start
-  = define+
+  =define+
 define=m1:defineName("\n"/" and "/" ") m2:(describe("\n")*)*{return {name:m1,describe:m2}}
 describe = defineHasProperty/defineHas/defineCan/comment
 
@@ -13,7 +13,7 @@ wordAndSeparator = m1:word m2:separator {return m1+m2}
 
 resourceNameWord = m1:capitalChar m2:[a-z]+ {return m1+m2.join('');} 
 resourceNameWordAndSeparator = comment/(m1:resourceNameWord m2:separator) {return m1+m2;}
-defineName =("A "/"An ") m1:resourceNameWordAndSeparator+  m2:("is "word)?(" "comment)? (" "?defineHasProperty)?{return {name:m1.join(''),is:m2[1]};}
+defineName =("A "/"An ") m1:resourceNameWordAndSeparator+  m2:("is "word)?(" "comment)? " "?m3:defineHasProperty?{return {name:m1.join(''),is:m2[1],property:m3};}
 
 hasName = m1:(word((space"which")/" "/"")){return m1;}
 hasNameString = m1:hasName+ {var returnVal="";m1.forEach(function(e,i){if(i==m1.length-1){returnVal += e[0];}else{returnVal +=e[0]+e[1];}});return returnVal;} 
@@ -33,8 +33,9 @@ canOperation =m:((" "word" or")/(" "word" and")/(" "word" by ")){return m[1];}
 
 defineCan = "can be" m1:canOperation+ m2:(canAuth+" "?)+{var returnArray=[]; m2.forEach(function(e){returnArray.push(e[0][0]);});return {operation:m1,auth:returnArray};}
 
-hasPropertyName = m1:(comment/word((space"which")/" "/"")){return m1;}
-hasPropertyNameString = m1:hasPropertyName+ {var returnVal="";m1.forEach(function(e,i){if(i==m1.length-1){returnVal += e[0];}else{returnVal +=e[0]+e[1];}});return returnVal;} 
+hasPropertyName = m1:(comment/word(" and"/" "/"")){return m1;}
+hasPropertyNameAndSpace = m1:hasPropertyName+{var returnVal=""; m1.forEach(function(e,i){if(i<m1.length-1){returnVal += e[0]+" ";}else{returnVal += e[0];}});return returnVal;}
+hasPropertyNameString = m1:(" "("a "/"an ")?hasPropertyNameAndSpace)+{var returnVal=[]; m1.forEach(function(e){returnVal.push(e[2]);}); return returnVal;}
 
 defineHasProperty
-="has properties from "("a "/"an ")? m1:hasPropertyNameString{return {property:m1}}
+="has properties from" m1:hasPropertyNameString{return {property:m1}}
