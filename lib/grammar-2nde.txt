@@ -1,0 +1,44 @@
+start
+  =define+
+define=m1:defineName("\n"/" and "/" ") m2:(describe("\n")*)*{return {name:m1,describe:m2}}
+describe = defineHasProperty/defineHas/defineCan/defineBelong/comment
+
+separator = space/comment/""
+space = " "/comment
+comment="//"(char/" ")*(""/"\n") {return ["",""];}
+char = [A-z0-9*':?{()+|}/.,\\\]\["^\-$]
+capitalChar = [A-Z]
+word = m1:char+ {return m1.join('');}
+wordAndSeparator = m1:word m2:separator {return m1+m2}
+
+resourceNameWord = m1:capitalChar m2:[a-z]+ {return m1+m2.join('');} 
+resourceNameWordAndSeparator = comment/(m1:resourceNameWord m2:separator) {return m1+m2;}
+defineName =("A "/"An ") m1:resourceNameWordAndSeparator+  m2:("is "word)?(" "comment)? " "?m3:defineHasProperty?{return {name:m1.join(''),is:m2[1],property:m3};}
+
+hasName = m1:(word((space"which")/" "/"")){return m1;}
+hasNameString = m1:hasName+ {var returnVal="";m1.forEach(function(e,i){if(i==m1.length-1){returnVal += e[0];}else{returnVal +=e[0]+e[1];}});return returnVal;} 
+
+hasDes = m1:(comment/word(" and"/" "/"")){return m1;}
+hasDesString = m1:hasDes+  {var returnVal="";m1.forEach(function(e,i){if(i==m1.length-1){returnVal += e[0];}else{returnVal +=e[0]+e[1];}});return returnVal;} 
+
+spaceAndHasDesString = m1:space m2:hasDesString {return m2;}
+hasDescrib = m1:(" is"/" has"/" have")(" a"/" an")? m2:spaceAndHasDesString+{var object={}; object[m1.replace(" ","")]=m2;return object;}
+
+defineHas = "has "m1:("many "/"one "/"a "/"an ") m2:hasNameString m3:hasDescrib*{var object={'number':m1.replace(" ",""),'has a':m2}; m3.push(object);return m3;}
+
+canAuth = ("a "/"an ")?m:canName+ {var returnString=""; m.forEach(function(e){returnString += e[0]+" "}); return returnString}
+canName = m1:(comment/word((space"or")/space/"")){return m1;}
+canNameString = m1:canName+ {var returnVal="";m1.forEach(function(e,i){if(i==m1.length-1){returnVal += e[0];}else{returnVal +=e[0]+e[1];}});return returnVal;} 
+
+canOperation =m:((" "word" or")/(" "word" and")/(" "word" by ")){return m[1];}
+
+defineCan = "can be" m1:canOperation+ m2:(canAuth+" "?)+{var returnArray=[]; m2.forEach(function(e){returnArray.push(e[0][0]);});return {operation:m1,auth:returnArray};}
+
+hasPropertyName = m1:(comment/word(" and"/" "/"")){return m1;}
+hasPropertyNameAndSpace = m1:hasPropertyName+{var returnVal=""; m1.forEach(function(e,i){if(i<m1.length-1){returnVal += e[0]+" ";}else{returnVal += e[0];}});return returnVal;}
+hasPropertyNameString = m1:(" "("a "/"an ")?hasPropertyNameAndSpace)+{var returnVal=[]; m1.forEach(function(e){returnVal.push(e[2]);}); return returnVal;}
+
+defineHasProperty
+="has properties from" m1:hasPropertyNameString{return {property:m1}}
+
+defineBelong = "belongs to " ("a "/"an ") m1:resourceNameWordAndSeparator{return {'belongs':m1};}
