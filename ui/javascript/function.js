@@ -25,9 +25,9 @@ function initialize(){
 
 function addLineNumber(){
 	var string= $("#input-text").html();
-	
-	if(string.match('<div>')){
-		var numberOfLine= string.match(/<div>/g).length+1;
+
+	if(string.match('<div')){
+		var numberOfLine= string.match(/<div/g).length+1;
 		var lineNumberHtml= '';
 		
 		for (var i=1; i <= numberOfLine; i++){
@@ -41,7 +41,7 @@ function addLineNumber(){
 function parseInputText(){
 	var string= $("#input-text").html();
 	
-	string=string.replace(/\&nbsp;/g,' ').replace(/<div>/g,'\n').replace(/<\/div>/g,'').replace(/<br>/g,'');
+	string=string.replace(/\&nbsp;/g,' ').replace(/<div\s([A-z0-9=":\s(,);])+>/g,'\n').replace(/<([\/A-z0-9=":\s(,);])+>/g,'');
 	
 	try{
 		var parsed=result.parse(string);
