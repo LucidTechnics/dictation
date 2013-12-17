@@ -24,11 +24,11 @@ function initialize(){
 
 
 function addLineNumber(){
-	var string= $("#input-text").html();
+	var string = $("#input-text").html();
 
 	if(string.match('<div')){
-		var numberOfLine= string.match(/<div/g).length+1;
-		var lineNumberHtml= '';
+		var numberOfLine = string.match(/<div/g).length+1;
+		var lineNumberHtml = '';
 		
 		for (var i=1; i <= numberOfLine; i++){
 			lineNumberHtml+= '<div id="'+i+'" class="line-number">'+i+'</div>';
@@ -39,18 +39,21 @@ function addLineNumber(){
 }
 
 function parseInputText(){
-	var string= $("#input-text").html();
-	
-	string=string.replace(/\&nbsp;/g,' ').replace(/<div\s([A-z0-9=":\s(,);])+>/g,'\n').replace(/<([\/A-z0-9=":\s(,);])+>/g,'');
-	
+
+	var string = $("#input-text").html();
+
+	string = string.replace(/\&nbsp;/g,' ').replace(/<div(\s([A-z0-9=":\s(,);])+)*>/g,'\n').replace(/<([\/A-z0-9=":\s(,);])+>/g,'');
+
 	try{
-		var parsed=result.parse(string);
+		var parsed = result.parse(string);
 		removeErrIcon();
 	}
 	catch(err){
-		var lineErr= err.line;
+		var columnErr = err.column;
+		var lineErr = err.line;
+			
 		$('#'+lineErr).html('<i class="fa fa-exclamation-triangle"></i>'+lineErr);
-		errMessage= err.message;
+		errMessage = err.message;
 		$('.fa-exclamation-triangle').mouseover(function(_e){
 			hoverOver(_e);
 		});
