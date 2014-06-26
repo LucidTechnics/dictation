@@ -1,0 +1,350 @@
+{
+  var not = false;
+
+  var resources = [];
+
+  function Resource(n) {
+    /*
+    this.resource = null;       // A/An Capitalized Word
+    this.abstract = null;       // A/An Resource is abstract
+    this.alias = null;          // Alias Resource
+    this.audited = null;        // A Resource is audited
+    */
+    this.haspropertiesof = [];  // A Resource has properties of Another Resource and Third Resource
+    this.attributes = [];
+    this.canbe = [];
+  }
+
+  function Attribute() {
+    /*
+    this.name = null;            // has a/an attribute name
+    this.properties = null;      // has a name which ... 
+    this.quant = null;           // a/an/one/many
+    this.resource = null;        // has one/many Resource Name
+    */
+  }
+
+  function Property (){
+     /*
+     this.collection = null;           // has an attribute which has a list/set/map   
+     this.collectiontotype = null;     // list/set of Resource Name / integer /double...
+     this.collectiontype = null;       // map of string to integer
+     this.encrypted = null;            // which is encrypted
+     this.equal = null;                // which is equal to something
+     this.greaterthan = null;          // which is greater/bigger than/then something
+     this.greaterthanorequal = null;   // which is greater than ore equal to something
+     this.hidden = null;               // which is hidden
+     this.indexable = null;            // which is indexable
+     this.label = null;                // which has label "something"  OR which has label something
+     this.lessthan = null;             // which is smaller/less than/then something
+     this.lessthanorequal = null;      // which is smaller than or equal to something
+     this.maxlength = null;            // which has maximum/max length
+     this.minlength =  null;           // which has minimum/min length
+     this.notequal = null;             // which is not equal to something
+     this.propertygroup = null;        // which has property group something OR "something"
+     this.readonly = null;             // which is read only
+     this.required = null;             // which is required
+     this.searchable = null;           // which is searchable
+     this.sensitive = null;            // which is sensitive
+     this.type = null;                 // which has type Resource Name / integer / double...
+     this.widget = null;               // which has a widget something
+     this.allowedvalues = [];          // which ahs allowed values "thing1, thing2, thing3"
+     */
+     this.has = [];
+  }
+
+  function CanBe() {
+     /*
+     this.by = [];           // can be collected/created... by person1 or person2 and person3
+     this.collected = null;  // can be collected
+     this.created = null;    // can be created
+     this.deleted = null;    // can be deleted
+     this.updated = null;    // can be updated
+     this.viewed = null;     // can be viewed
+     */
+  }
+
+  var res = new Resource();
+  var attr = new Attribute();
+  var prop = new Property();
+  var can = new CanBe();
+}
+
+start
+ = define+
+   {return resources;}
+
+define
+ = resource attribute* (EOL*/EOF) 
+   {resources.push(res); res = new Resource();}
+
+resource
+ = (resourcedefinition / alias) EOL+
+
+resourcedefinition
+ = (ana rn:resname+ resproperties*)
+   {res.resource = rn.join(" ");} 
+
+ana
+ = ("An"/"A") ws+
+
+resname
+ = l1:[A-Z] l2:[a-z]+ l3:ws* 
+   {return l1+l2.join("");}
+
+resproperties
+ = (abstract / audited / haspropertiesof / islikea) ("and" ws+)?
+
+abstract
+ = "is" ws+ "abstract" ws*
+   {res.abstract = 'abstract';}
+
+audited
+ = "is" ws+ "audited" ws*
+   {res.audited = 'audited';}
+
+haspropertiesof
+ = "has" ws+ "properties" ws+ ("of"/"from") ws+ rp:resprop+
+   {res.haspropertiesof.push(rp);}
+
+islikea
+ = "is" ws+ "like" ws+ rp:resprop
+   {res.alias = rp;}
+
+resprop
+ = ("an"/"a"/"one"/"many") ws+ rp:resname+ ws* ("and" ws+)?
+   {return rp.join(" ");}
+
+attribute
+ = (hasbelongproperties / can)  (EOL+/EOF)
+
+hasbelongproperties
+ = ((has / belong) properties*)
+   {attr.properties = prop; res.attributes.push(attr); attr = new Attribute(); prop = new Property();}
+
+has
+ = 'has' ws+ (hasatt / hasres)
+
+hasatt
+ = quant:('an'/'a') ws+ attn:attname ws*
+   {attr.quant = quant;  attr.name = attn;}
+
+hasres
+ = quant:('one'/'many') ws+ rn:resname+ ws*
+   {attr.quant = quant; attr.resource = rn;}
+
+attname
+ = name:(tmp:(!("which"/EOL/EOF) .) {return tmp[1];})*
+   {return name.join("");}
+
+properties
+ = "which" ws+ which 
+  
+which
+ = (whichhasallowedvalues / whichhaslabel / whichhasregex / whichis /
+    whichhaspropertygroup / whichhasmaxlength / whichhasminlength / whichhaswidget / 
+    whichhascollection / whichhastype / whichhas)*
+
+whichhasallowedvalues
+ = "has" ws+ "allowed" ws+ "values" ws+ name:allowedvals
+   {prop.allowedvalues = name;}
+
+allowedvals
+ = "\"" ws* vals:allowedval+ "\"" ws* ("and" ws*)?
+   {return vals;} 
+
+allowedval
+ = val:[^","]+ ws* (",")? ws*
+   {return val.join("");}
+
+whichhaslabel
+ = "has" ws+ "label" ws+ name:(getquotename / whichvalue)
+    {prop.label = name;}
+
+whichhastype
+ = "has" ws+ "type" ws+ name:whichvalue
+   {prop.type= name;}
+
+whichhasregex
+ = "has" ws+ "regex" ws+ "format" ws+ name:getquotename
+   {prop.regexformat = name;}
+
+whichhasmaxlength
+ = "has" ws+ ("maximum"/"max") ws+ "length" ws+ name:whichvalue
+   {prop.maxlength = name;}
+
+whichhasminlength
+ = "has" ws+ ("minimum"/"min") ws+ "length" ws+ name:whichvalue
+   {prop.minlength = name;}
+
+whichhaswidget
+ = "has" ws+ "widget" ws+ name:whichvalue
+   {prop.widget = name;}
+
+whichhascollection
+ = "has" ws+ "type" ws+ (list / set / map)
+
+list
+ = "list" ws+ "of" type:whichvalue
+   {prop.collection = 'list'; prop.collectiontype = type;}
+
+set
+ = "set" ws+ "of" type:whichvalue
+   {prop.collection = 'set'; prop.collectiontype = type;}
+
+map
+ = "map" ws+ "of" type:whichmapvalue "to" ws+ totype:whichvalue 
+   {prop.collection = 'map'; prop.collectiontype = type; prop.collectiontotype = totype;}
+
+whichhas
+ = "has" "crashingtime" ws+ name:whichvalue
+   {prop.has.push(name);}
+
+whichhaspropertygroup
+ = "has" ws+ "property" ws+ "group" ws+ rn:(getquotename / whichvalue) ("and")? ws*
+   {prop.propertygroup = rn;}
+
+getquotename
+ = "\"" rn:[^\"]+ "\"" ws* ("and" ws+)?
+   {return rn.join("");}
+
+whichvalue
+ = name:(tmp:(!(("and" ws+)/EOL/EOF) .) {return tmp[1];})* ("and")? ws*
+   {return name.join("");}
+
+whichmapvalue
+ = name:(tmp:(!(ws+ "to") .) {return tmp[1];})* ws+
+   {return name.join("");}
+
+whichis
+ = "is" ws+ not 
+   (indexable/required/sensitive/encrypted/
+    greaterthanorequal/greaterthan/lessthanorequal/lessthan/equal/
+    searchable/readonly/hidden)
+   ("and" ws+)? 
+   {not = false;}
+
+not
+ = n:("not")? ws*
+   {if (n != null) {not = true;}}
+
+indexable
+ = "indexable" ws*
+   {if(not) {prop.indexable = 'not indexable';} else {prop.indexable ='indexable';}}
+
+required
+ = "required" ws*
+   {if(not) {prop.required = 'not required';} else {prop.required = 'required';}}
+
+sensitive
+ = "sensitive" ws*
+   {if(not) {prop.sensitive = 'not sensitive';} else {prop.sensitive = 'sensitive';}}
+
+encrypted
+ = "encrypted" ws*
+   {if(not) {prop.encrypted = 'not encrypted';} else {prop.encrypted = 'encrypted';}}
+
+greaterthanorequal
+ = ("greater"/"bigger") ws+ ("than"/"then") ws+ "or" ws+ "equal" ws+ "to" ws+ num:whichvalue ws*
+   {if(not) {prop.lessthanorequal = num;} else {prop.greaterthanorequal = num;}}
+
+greaterthan
+ = ("greater"/"bigger") ws+ ("than"/"then") ws+ num:whichvalue ws*
+   {if(not) {prop.lessthan = num;} else {prop.greaterthan = num;}}
+
+lessthanorequal
+ = ("less"/"smaller") ws+ ("than"/"then") ws+ "or" ws+ "equal" ws+ "to" ws+ num:whichvalue ws*
+   {if(not) {prop.greaterthanorequal = num;} else {prop.lessthanorequal = num;}}
+
+lessthan
+ = ("less"/"smaller") ws+ ("than"/"then") ws+ num:whichvalue ws*
+   {if(not) {prop.greaterthan = num;} else {prop.lessthan = num;}}
+
+equal
+ = ("equal") ws+ "to" ws+ num:whichvalue
+   {if(not) {prop.notequal = num;} else {prop.equal = num;}}
+
+searchable
+ = "searchable" ws*
+    {if(not) {prop.searchable = 'not searchable';} else {prop.searchable = 'searchable';}}
+
+readonly
+ = "read" ws+ "only" ws*
+    {if(not) {prop.readonly = 'not readonly';} else {prop.readonly = 'readonly';}}
+
+hidden
+ = "hidden" ws*
+    {if(not) {prop.hidden = 'not hidden';} else {prop.hidden = 'hidden';}}
+
+can
+ = "can" ws+ "be" ws+ cans+ "b" by*
+   {res.canbe.push(can);  can = new CanBe();}
+
+cans
+ = (viewed / created / updated / collected / deleted)
+   {can.by = [];}
+
+viewed
+ = "viewed" ws* (("and" / "or") ws+)?
+    {can.viewed = 'viewed';}
+
+created
+ = "created" ws* (("and" / "or") ws+)?
+    {can.created = 'created';}
+
+updated
+ = "updated" ws* (("and" / "or") ws+)?
+    {can.updated = 'updated';}
+
+collected
+ = "collected" ws* (("and" / "or") ws+)?
+    {can.collected = 'collected';}
+
+deleted
+ = "deleted" ws* (("and" / "or") ws+)?
+    {can.deleted = 'deleted';}
+
+by
+ = firstby / otherby
+
+firstby
+ ="y" ws+ byname:byvalue
+   {can.by.push(byname);}
+
+otherby
+ = ("and"/"or") ws+ byname:byvalue
+   {can.by.push(byname);}
+
+byvalue
+ = name:(tmp:(!("and"/"or"/EOL/EOF) .) {return tmp[1];})* ws*
+   {return name.join("");}
+
+belong
+ = "belongs" ws+ "to" ws+ quant:("one"/"many") ws+ rn:resname+ ws*
+   {attr.quant = quant; attr.resource = rn.join(" ");}
+
+alias
+ = "Alias" ws rn:resname+ "is" ws+ ("an"/"a") ws+ an:resname+
+   {res.resource = rn.join(" "); res.alias = an.join(" ");}
+
+number
+ = num:[0-9]+
+   {return num.join("");}
+
+ws "white space"
+ = (' ' / '\t')
+
+EOL
+ = (comment+ / '\n')
+
+comment
+ = '//' (!("\n"/EOF) .)* ("\n")? 
+
+EOF
+ = !.
+
+
+
+
+
+
