@@ -48,9 +48,15 @@
      this.sensitive = null;            // which is sensitive
      this.type = null;                 // which has type Resource Name / integer / double...
      this.widget = null;               // which has a widget something
+<<<<<<< HEAD
      this.allowedvalues = [];          // which has allowed values "thing1, thing2, thing3"
      */
      this.has = [];
+=======
+     this.allowedvalues = [];          // which ahs allowed values "thing1, thing2, thing3"
+     this.has = null;
+	 */
+>>>>>>> d2902a3244d500ca1da98db7e655c9356b505121
   }
 
   function CanBe() {
@@ -78,22 +84,25 @@ define
  = resource attribute* (EOL*/EOF) 
    {resources.push(res); res = new Resource();}
 
-resource
- = (resourcedefinition / alias) EOL+
+resource //"A New Resource Definition (i.e. 'A Resource Name')"
+ = (resourcedefinition / alias) (EOL+/EOF)
 
 resourcedefinition
- = (ana rn:resname+ resproperties*)
+ = (ana rn:resname+ resproperties?)
    {res.resource = rn.join(" ");} 
 
-ana
+ana 
  = ("An"/"A") ws+
 
-resname
+resname "Resource Name"
  = l1:[A-Z] l2:[a-z]+ l3:ws* 
    {return l1+l2.join("");}
 
 resproperties
- = (abstract / audited / haspropertiesof / islikea) ("and" ws+)?
+ = (abstract / audited / haspropertiesof / islikea) resproperties2*
+
+resproperties2
+ = "and" ws+ (abstract / audited / haspropertiesof / islikea)
 
 abstract
  = "is" ws+ "abstract" ws*
@@ -112,14 +121,14 @@ islikea
    {res.alias = rp;}
 
 resprop
- = ("an"/"a"/"one"/"many") ws+ rp:resname+ ws* ("and" ws+)?
+ = ("an"/"a"/"one"/"many") ws+ rp:resname+ ws*
    {return rp.join(" ");}
 
 attribute
  = (hasbelongproperties / can)  (EOL+/EOF)
 
 hasbelongproperties
- = ((has / belong) properties*)
+ = ((has / belong) properties?)
    {attr.properties = prop; res.attributes.push(attr); attr = new Attribute(); prop = new Property();}
 
 has
@@ -133,24 +142,29 @@ hasres
  = quant:('one'/'many') ws+ rn:resname+ ws*
    {attr.quant = quant; attr.resource = rn;}
 
-attname
- = name:(tmp:(!("which"/EOL/EOF) .) {return tmp[1];})*
-   {return name.join("");}
+attname "attribute name"
+ = l1:[a-z] name:(tmp:(!("which"/EOL/EOF) .) {return tmp[1];})*
+   {return l1+name.join("");}
 
 properties
- = "which" ws+ which 
+ = "which" ws+ which which2*
   
 which
  = (whichhasallowedvalues / whichhaslabel / whichhasregex / whichis /
     whichhaspropertygroup / whichhasmaxlength / whichhasminlength / whichhaswidget / 
-    whichhascollection / whichhastype / whichhas)*
+    whichhascollection / whichhastype / whichhas)
 
+which2
+ = ("and"/"or") ws+ (whichhasallowedvalues / whichhaslabel / whichhasregex / whichis /
+    whichhaspropertygroup / whichhasmaxlength / whichhasminlength / whichhaswidget / 
+    whichhascollection / whichhastype / whichhas)
+	
 whichhasallowedvalues
  = "has" ws+ "allowed" ws+ "values" ws+ name:allowedvals
    {prop.allowedvalues = name;}
 
-allowedvals
- = "\"" ws* vals:allowedval+ "\"" ws* ("and" ws*)?
+allowedvals 'allowed values with format "val1, val2... '
+ = "\"" ws* vals:allowedval+ "\"" ws*
    {return vals;} 
 
 allowedval
@@ -198,19 +212,19 @@ map
 
 whichhas
  = "has" "crashingtime" ws+ name:whichvalue
-   {prop.has.push(name);}
+   {prop.has = name;}
 
 whichhaspropertygroup
- = "has" ws+ "property" ws+ "group" ws+ rn:(getquotename / whichvalue) ("and")? ws*
+ = "has" ws+ "property" ws+ "group" ws+ rn:(getquotename / whichvalue)
    {prop.propertygroup = rn;}
 
 getquotename
- = "\"" rn:[^\"]+ "\"" ws* ("and" ws+)?
+ = "\"" rn:[^\"]+ "\"" ws*
    {return rn.join("");}
 
-whichvalue
- = name:(tmp:(!(("and" ws+)/EOL/EOF) .) {return tmp[1];})* ("and")? ws*
-   {return name.join("");}
+whichvalue 'property'
+ = l1:[^' '] name:(tmp:(!(("and" ws+)/EOL/EOF) .) {return tmp[1];})*
+   {return l1+name.join("");}
 
 whichmapvalue
  = name:(tmp:(!(ws+ "to") .) {return tmp[1];})* ws+
@@ -221,7 +235,6 @@ whichis
    (indexable/required/sensitive/encrypted/
     greaterthanorequal/greaterthan/lessthanorequal/lessthan/equal/
     searchable/readonly/hidden)
-   ("and" ws+)? 
    {not = false;}
 
 not
@@ -277,72 +290,71 @@ hidden
     {if(not) {prop.hidden = 'not hidden';} else {prop.hidden = 'hidden';}}
 
 can
- = "can" ws+ "be" ws+ cans+ "b" by*
+ = "can" ws+ "be" ws+ cans by
    {res.canbe.push(can);  can = new CanBe();}
 
 cans
- = (viewed / created / updated / collected / deleted)
+ = (viewed / created / updated / collected / deleted) cans2*
    {can.by = [];}
 
+cans2
+ = ("and"/"or") ws+ (viewed / created / updated / collected / deleted)
+   
 viewed
- = "viewed" ws* (("and" / "or") ws+)?
+ = "viewed" ws*
     {can.viewed = 'viewed';}
 
 created
- = "created" ws* (("and" / "or") ws+)?
+ = "created" ws*
     {can.created = 'created';}
 
 updated
- = "updated" ws* (("and" / "or") ws+)?
+ = "updated" ws*
     {can.updated = 'updated';}
 
 collected
- = "collected" ws* (("and" / "or") ws+)?
+ = "collected" ws*
     {can.collected = 'collected';}
 
 deleted
- = "deleted" ws* (("and" / "or") ws+)?
+ = "deleted" ws*
     {can.deleted = 'deleted';}
 
 by
- = firstby / otherby
-
-firstby
- ="y" ws+ byname:byvalue
+ ="by" ws+ byname:byvalue by2*
    {can.by.push(byname);}
 
-otherby
+by2
  = ("and"/"or") ws+ byname:byvalue
    {can.by.push(byname);}
 
-byvalue
- = name:(tmp:(!("and"/"or"/EOL/EOF) .) {return tmp[1];})* ws*
-   {return name.join("");}
+byvalue 'permissions'
+ = l1:[^' '] name:(tmp:(!("and"/"or"/EOL/EOF) .) {return tmp[1];})* ws*
+   {return l1+name.join("");}
 
 belong
  = "belongs" ws+ "to" ws+ quant:("one"/"many") ws+ rn:resname+ ws*
    {attr.quant = quant; attr.resource = rn.join(" ");}
 
 alias
- = "Alias" ws rn:resname+ "is" ws+ ("an"/"a") ws+ an:resname+
+ = "Alias" ws+ rn:resname+ "is" ws+ ("an"/"a") ws+ an:resname+
    {res.resource = rn.join(" "); res.alias = an.join(" ");}
 
 number
  = num:[0-9]+
    {return num.join("");}
 
-ws "white space"
+ws ""
  = (' ' / '\t')
 
-EOL
- = (comment+ / '\n')
+EOL ""
+ = (comment+ / '\n') ws*
 
-comment
+comment ""
  = '//' (!("\n"/EOF) .)* ("\n")? 
 
-EOF
+EOF "End of File"
  = !.
-
 
 
 
