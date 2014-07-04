@@ -48,7 +48,7 @@
      this.sensitive = null;            // which is sensitive
      this.type = null;                 // which has type Resource Name / integer / double...
      this.widget = null;               // which has a widget something
-     this.allowedvalues = [];          // which ahs allowed values "thing1, thing2, thing3"
+     this.allowedvalues = [];          // which has allowed values "thing1, thing2, thing3"
      */
      this.has = [];
   }

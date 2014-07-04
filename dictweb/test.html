@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html ng-app="dict">
+  <head>
+	<link href="index.css" rel="stylesheet">
+	<script type="text/javascript" src="angular.js"></script>
+	<script type="text/javascript" src="parser.js"></script>
+	<script type="text/javascript" src="index.js"></script>
+  </head>
+  <body ng-controller="DictationController as dicCtrl">
+	<div class="text">
+		<div style="width:80%; position:relative; left:10%; background-color:red; height:400px; color:white">
+			<br>
+			<div style="float:left; width:50%; background-color:green;">
+				<br>
+				Left Side
+				<br>
+				<textarea id="dictation" type="text" ng-model="dic" placeholder="A Resource"></textarea>
+				
+			</div>
+			<div style="float:right; width:50%; background-color:blue;">
+				<br>
+				Right side
+				<br>
+				<div id="comment" ng-model="comment" ng-show="parseInput($event)">{{ comment }}</div>
+			</div>
+		</div>
+	</div>
+  </body>
+</html>

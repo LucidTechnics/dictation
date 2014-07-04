@@ -1,0 +1,38 @@
+#dictation {
+position:relative;
+left:10%;
+top:50%;
+width:80%;
+height:20em;
+}
+
+#comment {
+position:relative;
+left:10%;
+height:10em;
+}
+
+#columns {
+  float:left;
+  width:80%;
+  margin-left:20%;
+}
+
+#left-column {
+  float:left;
+  width:50%;
+}
+
+#right-column {
+  float:left;
+  width:50%;
+  margin-left:50%;
+}
+
+
+
+/*
+h1#title <-this is a h1 with id="title"
+h1.title <-this is a h1 with class="title"
+*/
+
