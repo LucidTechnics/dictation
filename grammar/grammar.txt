@@ -50,7 +50,7 @@
      this.widget = null;               // which has a widget something
      this.allowedvalues = [];          // which ahs allowed values "thing1, thing2, thing3"
      this.has = null;
-	 */
+   */
   }
 
   function CanBe() {
@@ -82,7 +82,7 @@ resource //"A New Resource Definition (i.e. 'A Resource Name')"
  = (resourcedefinition / alias) (EOL+/EOF)
 
 resourcedefinition
- = (ana rn:resname+ resproperties*)
+ = (ana rn:resname+ resproperties?)
    {res.resource = rn.join(" ");} 
 
 ana 
@@ -92,41 +92,73 @@ resname "Resource Name"
  = l1:[A-Z] l2:[a-z]+ l3:ws* 
    {return l1+l2.join("");}
 
+//resproperties
+// = abstract haspropertiesof+
+// = audited haspropertiesof+
+// = audited islikea
+
 resproperties
- = (abstract / audited / haspropertiesof / islikea) ("and")? ws*
+ = (abstract / audited / haspropertiesof / islikea)
+
+//resproperties2
+// = "and" ws+ (abstract / audited / haspropertiesof / islikea)
 
 abstract
- = "is" ws+ "abstract" ws*
+ = "is" ws+ "abstract" ws* haspropertiesof2*
+   {res.abstract = 'abstract';}
+
+abstract2
+ = "and" ws+ "is" ws+ "abstract" ws*
    {res.abstract = 'abstract';}
 
 audited
- = "is" ws+ "audited" ws*
+ = "is" ws+ "audited" ws* islikeahaspropertiesof?
+   {res.audited = 'audited';}
+
+audited2
+ = "and" ws+ "is" ws+ "audited" ws*
    {res.audited = 'audited';}
 
 haspropertiesof
- = "has" ws+ "properties" ws+ ("of"/"from") ws+ rp:resprop+
-   {res.haspropertiesof.push(rp);}
+ = "has" ws+ "properties" ws+ ("of"/"from") ws+ resprop haspropertiesof2* abstractaudited?
 
+haspropertiesof2
+ = "and" ws+ "has" ws+ "properties" ws+ ("of"/"from") ws+ resprop 
+ 
 islikea
- = "is" ws+ "like" ws+ rp:resprop
+ = "is" ws+ "like" ws+ rp:resprop audited2?
    {res.alias = rp;}
 
+islikea2
+ = "and" ws+ "is" ws+ "like" ws+ rp:resprop
+   {res.alias = rp;}
+
+islikeahaspropertiesof
+ = islikea2 / haspropertiesof2*
+
+abstractaudited
+ = (abstract2 / audited2) haspropertiesof2*
+
 resprop
- = ("an"/"a"/"one"/"many") ws+ rp:resname+ ws* ("and" ws+)?
-   {return rp.join(" ");}
+ = ("an"/"a"/"one"/"many") ws+ rp:resname+ ws*
+   {res.haspropertiesof.push(rp.join(" "));}
+
+//resprop2
+// = "and" ws+ ("an"/"a"/"one"/"many") ws+ rp:resname+ ws*
+//   {res.haspropertiesof.push(rp.join(" "));}
 
 attribute
  = (hasbelongproperties / can)  (EOL+/EOF)
 
 hasbelongproperties
- = ((has / belong) properties*)
+ = ((has properties?) / (belong belongproperties?))
    {attr.properties = prop; res.attributes.push(attr); attr = new Attribute(); prop = new Property();}
 
 has
  = 'has' ws+ (hasatt / hasres)
 
 hasatt
- = quant:('an'/'a') ws+ attn:attname ws*
+ = quant:('an'/'a') ws+ attn:(attname / getquotename) ws*
    {attr.quant = quant;  attr.name = attn;}
 
 hasres
@@ -138,19 +170,33 @@ attname "attribute name"
    {return l1+name.join("");}
 
 properties
- = "which" ws+ which 
+ = "which" ws+ which which2*
+
+belongproperties
+ = "which" ws+ belongwhich belongwhich2*
   
 which
  = (whichhasallowedvalues / whichhaslabel / whichhasregex / whichis /
     whichhaspropertygroup / whichhasmaxlength / whichhasminlength / whichhaswidget / 
-    whichhascollection / whichhastype / whichhas)+
+    whichhascollection / whichhastype / whichhas)
+
+which2
+ = ("and"/"or") ws+ (whichhasallowedvalues / whichhaslabel / whichhasregex / whichis /
+    whichhaspropertygroup / whichhasmaxlength / whichhasminlength / whichhaswidget / 
+    whichhascollection / whichhastype / whichhas)
+  
+belongwhich
+ = (whichhaslabel / belongwhichis / whichhaspropertygroup) 
+
+belongwhich2
+ = ("and"/"or") ws+ (whichhaslabel / belongwhichis / whichhaspropertygroup)
 
 whichhasallowedvalues
  = "has" ws+ "allowed" ws+ "values" ws+ name:allowedvals
    {prop.allowedvalues = name;}
 
 allowedvals 'allowed values with format "val1, val2... '
- = "\"" ws* vals:allowedval+ "\"" ws* ("and" ws*)?
+ = "\"" ws* vals:allowedval+ "\"" ws*
    {return vals;} 
 
 allowedval
@@ -162,8 +208,8 @@ whichhaslabel
     {prop.label = name;}
 
 whichhastype
- = "has" ws+ "type" ws+ name:whichvalue
-   {prop.type= name;}
+ = "has" ws+ "type" ws+ name:(('whole' ws+ 'number')/'integer'/'int'/'float'/'double'/('real' ws+ 'number')/('decimal' ws+ 'number')/'date'/'text'/'address'/'email'/'phone' ws+ 'number'/'longitude'/'latitude'/'position'/('time' ws* 'stamp')/'string'/'boolean'/('big' ws+ 'number')/('small' ws+ 'number')/'bytes'/'char') ws+
+   {prop.type = name;}
 
 whichhasregex
  = "has" ws+ "regex" ws+ "format" ws+ name:getquotename
@@ -185,15 +231,15 @@ whichhascollection
  = "has" ws+ "type" ws+ (list / set / map)
 
 list
- = "list" ws+ "of" type:whichvalue
+ = "list" ws+ "of" ws+ type:whichvalue
    {prop.collection = 'list'; prop.collectiontype = type;}
 
 set
- = "set" ws+ "of" type:whichvalue
+ = "set" ws+ "of" ws+ type:whichvalue
    {prop.collection = 'set'; prop.collectiontype = type;}
 
 map
- = "map" ws+ "of" type:whichmapvalue "to" ws+ totype:whichvalue 
+ = "map" ws+ "of" ws+ type:whichmapvalue "to" ws+ totype:whichvalue 
    {prop.collection = 'map'; prop.collectiontype = type; prop.collectiontotype = totype;}
 
 whichhas
@@ -201,15 +247,15 @@ whichhas
    {prop.has = name;}
 
 whichhaspropertygroup
- = "has" ws+ "property" ws+ "group" ws+ rn:(getquotename / whichvalue) ("and")? ws*
+ = "has" ws+ "property" ws+ "group" ws+ rn:(getquotename / whichvalue)
    {prop.propertygroup = rn;}
 
-getquotename
- = "\"" rn:[^\"]+ "\"" ws* ("and" ws+)?
+getquotename '"name in quotes"'
+ = "\"" rn:[^\"]+ "\"" ws*
    {return rn.join("");}
 
 whichvalue 'property'
- = l1:[^' '] name:(tmp:(!(("and" ws+)/EOL/EOF) .) {return tmp[1];})* ("and")? ws*
+ = l1:[^' '] name:(tmp:(!(("and" ws+)/EOL/EOF) .) {return tmp[1];})*
    {return l1+name.join("");}
 
 whichmapvalue
@@ -221,7 +267,11 @@ whichis
    (indexable/required/sensitive/encrypted/
     greaterthanorequal/greaterthan/lessthanorequal/lessthan/equal/
     searchable/readonly/hidden)
-   ("and" ws+)? 
+   {not = false;}
+
+belongwhichis
+ = "is" ws+ not 
+   (indexable/required/searchable)
    {not = false;}
 
 not
@@ -245,19 +295,19 @@ encrypted
    {if(not) {prop.encrypted = 'not encrypted';} else {prop.encrypted = 'encrypted';}}
 
 greaterthanorequal
- = ("greater"/"bigger") ws+ ("than"/"then") ws+ "or" ws+ "equal" ws+ "to" ws+ num:whichvalue ws*
+ = ("greater"/"bigger") ws+ ("than") ws+ "or" ws+ "equal" ws+ "to" ws+ num:whichvalue ws*
    {if(not) {prop.lessthanorequal = num;} else {prop.greaterthanorequal = num;}}
 
 greaterthan
- = ("greater"/"bigger") ws+ ("than"/"then") ws+ num:whichvalue ws*
+ = ("greater"/"bigger") ws+ ("than") ws+ num:whichvalue ws*
    {if(not) {prop.lessthan = num;} else {prop.greaterthan = num;}}
 
 lessthanorequal
- = ("less"/"smaller") ws+ ("than"/"then") ws+ "or" ws+ "equal" ws+ "to" ws+ num:whichvalue ws*
+ = ("less"/"smaller") ws+ ("than") ws+ "or" ws+ "equal" ws+ "to" ws+ num:whichvalue ws*
    {if(not) {prop.greaterthanorequal = num;} else {prop.lessthanorequal = num;}}
 
 lessthan
- = ("less"/"smaller") ws+ ("than"/"then") ws+ num:whichvalue ws*
+ = ("less"/"smaller") ws+ ("than") ws+ num:whichvalue ws*
    {if(not) {prop.greaterthan = num;} else {prop.lessthan = num;}}
 
 equal
@@ -277,41 +327,41 @@ hidden
     {if(not) {prop.hidden = 'not hidden';} else {prop.hidden = 'hidden';}}
 
 can
- = "can" ws+ "be" ws+ cans+ "b" by+
+ = "can" ws+ "be" ws+ cans by
    {res.canbe.push(can);  can = new CanBe();}
 
 cans
- = (viewed / created / updated / collected / deleted)
+ = (viewed / created / updated / collected / deleted) cans2*
    {can.by = [];}
 
+cans2
+ = ("and"/"or") ws+ (viewed / created / updated / collected / deleted)
+   
 viewed
- = "viewed" ws* (("and" / "or") ws+)?
+ = "viewed" ws*
     {can.viewed = 'viewed';}
 
 created
- = "created" ws* (("and" / "or") ws+)?
+ = "created" ws*
     {can.created = 'created';}
 
 updated
- = "updated" ws* (("and" / "or") ws+)?
+ = "updated" ws*
     {can.updated = 'updated';}
 
 collected
- = "collected" ws* (("and" / "or") ws+)?
+ = "collected" ws*
     {can.collected = 'collected';}
 
 deleted
- = "deleted" ws* (("and" / "or") ws+)?
+ = "deleted" ws*
     {can.deleted = 'deleted';}
 
 by
- = firstby / otherby
-
-firstby
- ="y" ws+ byname:byvalue
+ ="by" ws+ byname:byvalue by2*
    {can.by.push(byname);}
 
-otherby
+by2
  = ("and"/"or") ws+ byname:byvalue
    {can.by.push(byname);}
 
@@ -331,7 +381,7 @@ number
  = num:[0-9]+
    {return num.join("");}
 
-ws ""
+ws "'white space'"
  = (' ' / '\t')
 
 EOL ""
