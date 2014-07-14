@@ -9,10 +9,13 @@
     this.abstract = null;       // A/An Resource is abstract
     this.alias = null;          // Alias Resource
     this.audited = null;        // A Resource is audited
+    this.mappingfrom = null;    // A Resource maps from Resource1 to Resource2
+    this.mappingto = null;      // A Resource maps from Resource1 to Resource2
     */
     this.haspropertiesof = [];  // A Resource has properties of Another Resource and Third Resource
     this.attributes = [];
     this.canbe = [];
+    this.maps = [];
   }
 
   function Attribute() {
@@ -53,6 +56,13 @@
    */
   }
 
+  function Map () {
+    /*
+    this.from = [];
+    this.to = [];
+    */
+  } 
+
   function CanBe() {
      /*
      this.by = [];           // can be collected/created... by person1 or person2 and person3
@@ -64,6 +74,7 @@
      */
   }
 
+  var maps = new Map();
   var res = new Resource();
   var attr = new Attribute();
   var prop = new Property();
@@ -75,14 +86,24 @@ start
    {return resources;}
 
 define
- = resource attribute* (EOL*/EOF) 
+ = ana (resourcedef / mappingdef) 
    {resources.push(res); res = new Resource();}
 
-resource //"A New Resource Definition (i.e. 'A Resource Name')"
+resourcedef
+ = resource attribute* (EOL*/EOF) 
+
+mappingdef
+ = resourcemap where* (EOL*/EOF)
+
+resourcemap
+ = rn:resname+ "maps" ws+ ("from" ws+)? (("a"/"an") ws+)? rn1:resname+ "to" ws+ (("a"/"an") ws+)? rn2:resname+ (EOL+/EOF)
+   {res.resource = rn.join(" "); res.mappingfrom = rn1.join(" "); res.mappingto = rn2.join(" "); }
+
+resource //"A New Resource Definition (i.e. 'A Resource Name...')"
  = (resourcedefinition / alias) (EOL+/EOF)
 
 resourcedefinition
- = (ana rn:resname+ resproperties?)
+ = (rn:resname+ resproperties?)
    {res.resource = rn.join(" ");} 
 
 ana 
@@ -138,6 +159,42 @@ islikeahaspropertiesof
 
 abstractaudited
  = (abstract2 / audited2) haspropertiesof2*
+
+//isamapping
+// = rn:resname+ "is" ws+ ("a" ws+ "mapping") ws+ ("of"/"from") ws+ rn1:resname+ "to" ws+ rn2:resname+ ws* (EOL*/EOF)
+//   {res.resource = rn.join(" "); res.mappingfrom = rn1.join(""); res.mappingto = rn2.join("");}
+
+where
+ = "where" ws+ mapfrom ("maps"/"map") ws+ "to" ws+ mapsto (EOL+/EOF)
+   {res.maps.push(maps);  maps = new Map();}
+
+ mapfrom
+  = m1:mapfrom1 m2:mapfrom2*
+   {m2.push(m1);  maps.from = m2;}
+
+mapfrom1 "attribute"
+ = l1:[a-z] name:(tmp:(!("and"/"maps"/"map") .) {return tmp[1];})*
+   {return l1+name.join("");}
+
+mapfrom2
+ = "and" ws+ a1:mapfrom1
+   {return a1;}
+
+//mapfrom1
+// = l1:[a-z] name:(tmp:(!("and"/"maps") .) {return tmp[1];})*
+//   {return l1+name.join("");}
+
+//mapfrom2
+// = "and" ws+ l1:[a-z] name:(tmp:(!("and"/"maps") .) {return tmp[1];})*
+//   {return l1+name.join("");}
+
+mapsto
+ = m1:mapsto1 ws*
+   {maps.to = m1;}
+
+mapsto1 "attribute"
+ = l1:[a-z] name:(tmp:(!(ws* "\n") .) {return tmp[1];})*
+   {return l1+name.join("");}
 
 resprop
  = ("an"/"a"/"one"/"many") ws+ rp:resname+ ws*
