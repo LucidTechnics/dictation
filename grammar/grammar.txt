@@ -203,7 +203,7 @@ has
  = 'has' ws+ (hasatt / hasres)
 
 hasatt
- = quant:('an'/'a') ws+ attn:(attname / getquotename) ws*
+ = quant:('an attribute'/'attribute'/'an'/'a') ws+ attn:(attname / getquotename) ws*
    {attr.quant = quant;  attr.name = attn;}
 
 hasres
@@ -253,7 +253,7 @@ whichhaslabel
     {prop.label = name;}
 
 whichhastype
- = "has" ws+ "type" ws+ name:(('whole' ws+ 'number')/'integer'/'int'/'float'/'double'/('real' ws+ 'number')/('decimal' ws+ 'number')/'date'/'text'/'address'/'email'/'phone' ws+ 'number'/'longitude'/'latitude'/'position'/('time' ws* 'stamp')/'string'/'boolean'/('big' ws+ 'number')/('small' ws+ 'number')/'bytes'/'char') ws+
+ = "has" ws+ "type" ws+ name:(('whole' ws+ 'number')/'integer'/'int'/'float'/'double'/('real' ws+ 'number')/('decimal' ws+ 'number')/'date'/'text'/'address'/'email'/'phone' ws+ 'number'/'longitude'/'latitude'/'position'/('time' ws* 'stamp')/'string'/'boolean'/('big' ws+ 'number')/('small' ws+ 'number')/'bytes'/'char') ws*
    {prop.type = name;}
 
 whichhasregex
