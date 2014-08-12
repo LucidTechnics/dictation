@@ -144,12 +144,14 @@ haspropertiesof2
  = "and" ws+ "has" ws+ "properties" ws+ ("of"/"from") ws+ resprop 
  
 islikea
- = "is" ws+ "like" ws+ rp:resprop audited2?
-   {res.alias = rp;}
+ = "is" ws+ "like" ws+ resalias audited2?
 
 islikea2
- = "and" ws+ "is" ws+ "like" ws+ rp:resprop
-   {res.alias = rp;}
+ = "and" ws+ "is" ws+ "like" ws+ resalias
+
+resalias
+ = ("an"/"a"/"one"/"many") ws+ rp:resname+ ws*
+   {res.alias = rp.join(" ");}
 
 islikeahaspropertiesof
  = islikea2 / haspropertiesof2*
